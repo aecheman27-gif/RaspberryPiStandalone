@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 1</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 1", title:"Blink",
+ svg: wrap(380,110, ttl(10,18,"GPIO17 → 220 Ω → LED → ground")
+   +term(60,60,"GPIO17","end")+W("64,60 96,60")+res(96,60,"220 Ω")+W("140,60 168,60")+ledH(168,60,"LED")+W("186,60 250,60 250,76")+gnd(250,76)),
+ code:`from gpiozero import LED
+from time import sleep
+
+led = LED(17)            # IO17
+while True:
+    led.on();  sleep(0.5)
+    led.off(); sleep(0.5)`,
+ run:"Standalone — paste straight into PyCharm and press Run. Stop with the red ■ or Ctrl+C.",
+ rows:[["GPIO17","IO17 row · a–d (left)","LED anode (+), via 220Ω"],["GND","GND row · a–d, or − rail","LED cathode (−)"]],
+ place:[["Jumper (ground the rail)","GND row · col a","blue − rail"],["220Ω resistor","IO17 row · col a","row 22 · col a"],["LED","long (+): row 22 · col b","short (−): row 24 · col b"],["Jumper","row 24 · col a","blue − rail"]],
+ note:"“row 22/24” = any two empty rows below the board. The resistor’s lower leg and the LED’s long leg share row 22 — that’s how they connect. Button &amp; LED variant: add a push button — one leg to the IO18 row (g–j), the other to the − rail; gpiozero uses the Pi’s internal pull-up so no extra resistor is needed."
+});
+</script>
+</body>
+</html>

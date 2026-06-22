@@ -6,12 +6,14 @@ End-to-end setup for a Raspberry Pi 5 running **Raspberry Pi OS (64-bit, Desktop
 
 | Setting | Value |
 |---|---|
-| Hostname | `Jarvis` |
+| Hostname | `edith` |
 | Username | `aecheman` |
 | OS | Raspberry Pi OS 64-bit, Desktop |
 | Display server | Wayland (Bookworm default on Pi 5) |
 | VNC server | Built-in **WayVNC** (enabled via `raspi-config`) |
-| Remote tools | OpenSSH + Tailscale + RealVNC Viewer (client) |
+| Remote tools | OpenSSH + Tailscale + **TigerVNC Viewer** (client) |
+
+> **Note on the VNC client:** WayVNC is a standard VNC server, but **RealVNC Viewer now requires a paid plan to connect to non-RealVNC ("third-party") servers**, so it will nag you. Use the free, no-account **TigerVNC Viewer** instead (TightVNC/UltraVNC also work). The Raspberry Pi project itself recommends TigerVNC.
 
 > Throughout, replace `aecheman` only if you change the username. Commands run **on the Pi** are noted as such; everything else runs in **Windows PowerShell / Windows Terminal**.
 
@@ -29,7 +31,7 @@ End-to-end setup for a Raspberry Pi 5 running **Raspberry Pi OS (64-bit, Desktop
 
 ### OS customisation — General tab
 
-- **Set hostname:** `Jarvis`  → the Pi will be reachable as `Jarvis.local` on your LAN.
+- **Set hostname:** `edith`  → the Pi will be reachable as `edith.local` on your LAN.
 - **Set username and password:** username `aecheman`, and a strong password. (Set a password even though we'll use keys — WayVNC and `sudo` will use it.)
 - **Configure wireless LAN:**
   - **SSID:** your Wi-Fi network name (exactly, case-sensitive)
@@ -73,7 +75,7 @@ Press Enter to accept the default path (`C:\Users\<you>\.ssh\id_ed25519`). Set a
 ### Step 3 — First connection
 
 ```powershell
-ssh aecheman@Jarvis.local
+ssh aecheman@edith.local
 ```
 
 Type `yes` to accept the host fingerprint, then enter the password you set in Imager. You're now on the Pi.
@@ -83,7 +85,7 @@ Type `yes` to accept the host fingerprint, then enter the password you set in Im
 **4a — If you used password auth in Imager**, run this single command from **Windows PowerShell** (not on the Pi). It copies your public key into the Pi's `authorized_keys`:
 
 ```powershell
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh aecheman@Jarvis.local "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh aecheman@edith.local "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 **4b — If Imager already installed your key**, nothing to do here.
@@ -91,7 +93,7 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh aecheman@Jarvis.local "mkdir -p 
 Now reconnect — it should **not** ask for a password:
 
 ```powershell
-ssh aecheman@Jarvis.local
+ssh aecheman@edith.local
 ```
 
 ---
@@ -103,13 +105,13 @@ Create or edit `C:\Users\<you>\.ssh\config` on Windows and add:
 ```sshconfig
 # Reach the Pi anywhere via Tailscale (set up in Part 5)
 Host pi
-    HostName Jarvis
+    HostName edith
     User aecheman
     IdentityFile ~/.ssh/id_ed25519
 
 # Reach the Pi on the local network only (works before Tailscale)
 Host pi-local
-    HostName Jarvis.local
+    HostName edith.local
     User aecheman
     IdentityFile ~/.ssh/id_ed25519
 ```
@@ -119,12 +121,12 @@ Quick way to append it from PowerShell:
 ```powershell
 @"
 Host pi
-    HostName Jarvis
+    HostName edith
     User aecheman
     IdentityFile ~/.ssh/id_ed25519
 
 Host pi-local
-    HostName Jarvis.local
+    HostName edith.local
     User aecheman
     IdentityFile ~/.ssh/id_ed25519
 "@ | Out-File -Append -Encoding ascii $env:USERPROFILE\.ssh\config
@@ -146,7 +148,7 @@ sudo apt update && sudo apt full-upgrade -y
 
 ### Enable the built-in VNC server (WayVNC)
 
-Because Bookworm on the Pi 5 uses **Wayland**, the built-in VNC server is **WayVNC**, not classic RealVNC Server. RealVNC *Viewer* on Windows still connects to it fine.
+Because Bookworm on the Pi 5 uses **Wayland**, the built-in VNC server is **WayVNC**, not classic RealVNC Server. Connect to it with a free client like TigerVNC Viewer (see Part 5) — note RealVNC Viewer now needs a paid plan for third-party servers.
 
 ```bash
 sudo raspi-config
@@ -167,16 +169,16 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-This prints a URL. Open it in your Windows browser and sign in **with GitHub** (or whatever account you use for Tailscale). The Pi joins your tailnet as `jarvis`.
+This prints a URL. Open it in your Windows browser and sign in **with GitHub** (or whatever account you use for Tailscale). The Pi joins your tailnet as `edith`.
 
 Recommended for an always-on device — disable key expiry so it never drops off:
 
 ```bash
 # After auth, in the Tailscale admin console (https://login.tailscale.com/admin/machines):
-# click the Jarvis machine → ⋯ → "Disable key expiry"
+# click the edith machine → ⋯ → "Disable key expiry"
 ```
 
-If you want MagicDNS short names (so `ssh pi` → `Jarvis` just works), make sure **MagicDNS is enabled** in the Tailscale admin console under **DNS**. It's on by default for new tailnets.
+If you want MagicDNS short names (so `ssh pi` → `edith` just works), make sure **MagicDNS is enabled** in the Tailscale admin console under **DNS**. It's on by default for new tailnets.
 
 ---
 
@@ -184,13 +186,13 @@ If you want MagicDNS short names (so `ssh pi` → `Jarvis` just works), make sur
 
 ### VNC (graphical desktop)
 
-1. Install **RealVNC Viewer** for Windows from <https://www.realvnc.com/en/connect/download/viewer/>.
-2. In the address bar type either:
-   - `Jarvis.local:5900` — on your home network, or
-   - `jarvis:5900` (or the Tailscale IP `100.x.y.z:5900`) — from anywhere via Tailscale.
-3. Accept the connection warning (it's an unencrypted-vs-RealVNC-cloud notice; fine on your LAN/tailnet), then log in with `aecheman` + your Pi password.
+1. Download **TigerVNC Viewer** for Windows — the free, no-account client. TigerVNC ships its Windows binaries on **SourceForge**, not GitHub: go to <https://sourceforge.net/projects/tigervnc/files/stable/> → newest version, and grab the standalone viewer named **`vncviewer64-<version>.exe`** (the ~24 MB one). It needs no install — just double-click it. (Avoid the `*winvnc*` files — those are the Windows *server*.)
+2. In the **VNC server** box type either:
+   - `edith.local:5900` — on your home network, or
+   - `100.x.y.z:5900` (your Tailscale IP) or `edith:5900` — from anywhere via Tailscale.
+3. On first connect you'll get an **"unknown certificate issuer"** prompt, then possibly a **"certificate hostname mismatch"** prompt (because you connected by IP). Both are expected — WayVNC uses a self-signed cert named after your user, and the connection is encrypted by Tailscale regardless. Click **Yes** to trust it; it's remembered after the first time. Then log in with `aecheman` + your Pi password.
 
-> If RealVNC Viewer refuses with an encryption/handshake error, it's expecting RealVNC's own server. WayVNC is a standard VNC server, so it works — just dismiss the "unencrypted connection" prompt, or use **TigerVNC Viewer** as an alternative client. Tailscale already encrypts the transport end-to-end.
+> Why not RealVNC Viewer? RealVNC now requires a **paid plan to connect to third-party VNC servers** like WayVNC, so it nags or blocks. TigerVNC (used here), **TightVNC**, and **UltraVNC** are all free and connect to WayVNC the same way. Tailscale already encrypts the transport end-to-end.
 
 ### SSH
 
@@ -209,26 +211,26 @@ Run these to confirm all three channels work.
 ```powershell
 ssh pi-local "echo SSH OK; hostname"
 ```
-Expected: `SSH OK` then `Jarvis`.
+Expected: `SSH OK` then `edith`.
 
 **VNC server listening (on the Pi):**
 ```bash
 sudo ss -tlnp | grep 5900
 ```
-Expected: a line showing `wayvnc` listening on `:5900`. Then confirm you can open the desktop in RealVNC Viewer.
+Expected: a line showing `wayvnc` listening on `:5900`. Then confirm you can open the desktop in TigerVNC Viewer.
 
 **Tailscale (on the Pi):**
 ```bash
 tailscale status
 tailscale ip -4
 ```
-Expected: `tailscale status` lists `jarvis` and your other devices; `tailscale ip -4` returns a `100.x.y.z` address.
+Expected: `tailscale status` lists `edith` and your other devices; `tailscale ip -4` returns a `100.x.y.z` address.
 
 **End-to-end (from Windows, ideally on a different network / phone hotspot):**
 ```powershell
 ssh pi "hostname && tailscale ip -4"
 ```
-If this returns `Jarvis` and the `100.x` IP while you're *off* your home Wi-Fi, remote access is fully working.
+If this returns `edith` and the `100.x` IP while you're *off* your home Wi-Fi, remote access is fully working.
 
 ---
 
@@ -237,13 +239,13 @@ If this returns `Jarvis` and the `100.x` IP while you're *off* your home Wi-Fi, 
 | Task | Command / Location |
 |---|---|
 | Flash + headless config | Raspberry Pi Imager → Edit Settings |
-| First SSH login | `ssh aecheman@Jarvis.local` |
+| First SSH login | `ssh aecheman@edith.local` |
 | Install public key | `type ...id_ed25519.pub \| ssh ... cat >> authorized_keys` |
 | Connect (LAN) | `ssh pi-local` |
 | Connect (anywhere) | `ssh pi` |
 | Enable VNC | `sudo raspi-config` → Interface Options → VNC |
 | Install Tailscale | `curl -fsSL https://tailscale.com/install.sh \| sh` then `sudo tailscale up` |
-| VNC client | RealVNC Viewer → `Jarvis.local:5900` or `jarvis:5900` |
+| VNC client | TigerVNC Viewer (`vncviewer64-*.exe`) → `edith.local:5900` or `100.x.y.z:5900` |
 
 ---
 
@@ -254,6 +256,4 @@ If this returns `Jarvis` and the `100.x` IP while you're *off* your home Wi-Fi, 
 - [Imager v2.0.0 public-key customisation bug — GitHub issue #1320](https://github.com/raspberrypi/rpi-imager/issues/1320)
 - [VNC on the Raspberry Pi 5 with PiOS Bookworm — Raspberry Connect](https://www.raspberryconnect.com/projects/41-tutorials-and-guides-1/201-vnc-on-the-raspberrypi-5-with-pios-bookworm)
 - [Set Up VNC on Raspberry Pi Bookworm: wayvnc & RealVNC — raspberry.tips](https://raspberry.tips/en/raspberrypi-einsteiger/raspberry-pi-vnc-setup-bookworm-wayvnc-realvnc-connect)
-- [RealVNC Connect and Raspberry Pi — RealVNC Help Center](https://help.realvnc.com/hc/en-us/articles/360002249917-RealVNC-Connect-and-Raspberry-Pi)
-- [Manual installation instructions for Raspberry Pi — Tailscale](https://tailscale.com/download/linux/rpi)
-- [Install Tailscale on Linux — Tailscale Docs](https://tailscale.com/docs/install/linux)
+- [RealVNC Connect and Raspbe

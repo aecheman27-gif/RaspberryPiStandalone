@@ -1,0 +1,17 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Office temp lock files
+~$*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# JetBrains / VS Code
+.idea/
+.vscode/

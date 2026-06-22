@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 4</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 4", title:"Photoresistor night-lamp",
+ svg: wrap(470,190, ttl(10,16,"Photoresistor voltage-divider → ADC → Pi")+ic(150,55,120,110,"ADC PCF8591")
+   +lpin(150,78,"VCC")+lpin(150,103,"GND")+lpin(150,128,"SDA")+lpin(150,150,"SCL")+rpin(270,105,"AIN0")
+   +W("138,78 120,78")+vcc(120,78,"3V3")+W("138,103 120,103")+gnd(120,103)
+   +term(40,128,"GPIO2","end")+W("44,128 138,128")+term(40,158,"GPIO3","end")+W("44,158 90,158 90,150 138,150")
+   +vcc(360,44,"3V3")+W("360,44 360,52")+resV(360,52,"LDR")+W("360,96 360,104")+dot(360,104)+resV(360,104,"10k")+W("360,148 360,158")+gnd(360,158)+W("282,105 360,105")
+   +'<text x="300" y="100" font-size="10" fill="#5C6B7A">node</text>'),
+ code:`from ADCDevice import *      # bundled in the 10.1.1_Nightlamp folder
+from gpiozero import PWMLED
+from time import sleep
+
+adc = ADCDevice()
+if   adc.detectI2C(0x48): adc = PCF8591()
+elif adc.detectI2C(0x4b): adc = ADS7830()
+else: print("ADC not found - run: i2cdetect -y 1"); exit(-1)
+
+led = PWMLED(17)
+while True:
+    value = adc.analogRead(0)            # brighter room -> higher value
+    led.value = value / 255.0            # LED brightness follows the light
+    print(value)
+    sleep(0.1)`,
+ run:"Needs ADCDevice.py (bundled in 10.1.1_Nightlamp). Enable I2C first.",
+ rows:[["GPIO2 (SDA)","IO2 row · a–d","ADC SDA"],["GPIO3 (SCL)","IO3 row · a–d","ADC SCL"],["3V3","3V3 row, or + rail","ADC VCC + divider top"],["GND","GND row, or − rail","ADC GND + divider bottom"],["—","ADC AIN0 pin","Divider mid-point (node)"],["GPIO17","IO17 row · a–d","LED via 220Ω → GND"]],
+ place:[["Photoresistor (LDR)","row 24 · col a → row 26 · col a","top → + rail, bottom → node"],["10kΩ resistor","row 26 · col b → − rail","forms the divider; node (row 26) → ADC AIN0"]],
+ note:"The LDR and the 10kΩ resistor form a voltage divider. In bright light the LDR’s resistance drops and the node voltage rises; in the dark it falls. The ADC reads that node on AIN0, and one if-statement (‘if dark, turn the LED on’) makes it a night-lamp."
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 2</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 2", title:"RGB LED (common anode)",
+ svg: wrap(430,176, ttl(10,16,"RGB LED — common anode: 3V3 to common, each GPIO sinks one colour")
+   +vcc(215,40,"3V3")+W("150,40 280,40")
+   +ledV(150,40)+W("150,56 150,62")+resV(150,62,"")+W("150,106 150,128")+termB(150,128,"GPIO17")+'<text x="120" y="58" font-size="11" font-weight="700" fill="#E5392B">R</text>'
+   +ledV(215,40)+W("215,56 215,62")+resV(215,62,"")+W("215,106 215,128")+termB(215,128,"GPIO18")+'<text x="185" y="58" font-size="11" font-weight="700" fill="#1F8A4C">G</text>'
+   +ledV(280,40)+W("280,56 280,62")+resV(280,62,"")+W("280,106 280,128")+termB(280,128,"GPIO27")+'<text x="250" y="58" font-size="11" font-weight="700" fill="#2E6BE5">B</text>'
+   +'<text x="305" y="84" font-size="10" fill="#5C6B7A">220 Ω each</text>'),
+ code:`from gpiozero import RGBLED
+from time import sleep
+
+# common-anode LED -> active_high=False
+led = RGBLED(red=17, green=18, blue=27, active_high=False)
+
+while True:
+    led.color = (1, 0, 0); sleep(1)   # red
+    led.color = (0, 1, 0); sleep(1)   # green
+    led.color = (0, 0, 1); sleep(1)   # blue
+    led.color = (1, 1, 0); sleep(1)   # yellow`,
+ run:"Standalone. If your RGB LED is common-cathode instead, set active_high=True.",
+ rows:[["GPIO17","IO17 row · a–d","Red leg, via 220Ω"],["GPIO18","IO18 row · g–j (right)","Green leg, via 220Ω"],["GPIO27","IO27 row · a–d","Blue leg, via 220Ω"],["3V3","3V3 row · a–d, or + rail","Common anode (+)"]],
+ place:[["RGB LED","4 legs in rows 22–25 · col c","common, R, G, B (check the part for leg order)"],["3× 220Ω","R/G/B leg rows · col b","to IO17 / IO27 (left); jumper across to IO18 (right)"],["Jumper","3V3 row · col a","+ rail → common-anode leg"]],
+ note:"Common-anode RGB LED: the common (longest) leg goes to 3V3 / + rail; each colour lights when its GPIO is driven LOW (that’s why the code uses active_high=False). GPIO18 is on the RIGHT half of the board, so the green channel needs a jumper across the centre."
+});
+</script>
+</body>
+</html>

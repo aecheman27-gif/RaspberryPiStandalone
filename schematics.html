@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson Schematics — Index</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h1>Lesson Schematics</h1><div class="sub">One page per lesson — proper schematics + the exact breadboard hole for each connection</div></div>
+<div class="wrap">
+  <div class="keybox">
+    <b>How to read these</b>
+    <ul>
+      <li><b>Symbols:</b> zig-zag = resistor · triangle+bar = LED (current flows the way it points) · striped ⏚ = ground (any GND pin or the − rail) · flag = 3V3/5V supply · ○ = a Pi GPIO pin.</li>
+      <li><b>Breadboard:</b> columns <code>a b c d e</code> (left half) / <code>f g h i j</code> (right half); holes in the same row &amp; half are joined.</li>
+      <li><b>Extension board:</b> left-column pins sit at hole <b>e</b> (use free holes <b>a–d</b>); right-column at hole <b>f</b> (use <b>g–j</b>). Find a pin by its printed label. Build rows ~<b>21+</b> are empty.</li>
+    </ul>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p class="note" style="border-left-color:var(--gold)">Full breadboard photos: <b>Tutorial_Python_GPIOZero.pdf</b>. Back to the course: <a href="pi-course.html">pi-course.html</a>.</p>
+</div>
+<script>
+var L=[
+ ["s1","Session 1","Blink","GPIO17 → resistor → LED → ground"],
+ ["s2","Session 2","RGB LED","Common-anode RGB on GPIO17/18/27"],
+ ["s3","Session 3","ADC + potentiometer","Read a knob over I²C"],
+ ["s4","Session 4","Photoresistor night-lamp","LDR voltage divider → ADC"],
+ ["s5","Session 5","Servo (Sweep)","3-wire servo on GPIO18"],
+ ["s6","Session 6","LCD1602 (I²C)","4-wire text display"],
+ ["s7","Session 7","Ultrasonic HC-SR04","Echo via voltage divider"],
+ ["s8","Session 8","WebIO","Control GPIO from a browser"]
+];
+document.getElementById('grid').innerHTML=L.map(function(x){
+ return '<a class="card" id="'+x[0]+'" href="lesson-'+x[0]+'.html"><div class="n">'+x[1]+'</div><h3>'+x[2]+'</h3><p>'+x[3]+'</p></a>';
+}).join('');
+</script>
+</body>
+</html>

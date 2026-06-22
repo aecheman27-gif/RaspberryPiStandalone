@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 7</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 7", title:"Ultrasonic HC-SR04",
+ svg: wrap(470,205, ttl(10,16,"HC-SR04 — Echo through a divider to protect GPIO24")+ic(300,50,140,120,"HC-SR04")
+   +lpin(300,74,"VCC")+lpin(300,100,"Trig")+lpin(300,126,"Echo")+lpin(300,152,"GND")
+   +W("288,74 262,74")+vcc(262,74,"5V")+term(50,100,"GPIO23","end")+W("54,100 288,100")
+   +W("288,126 246,126")+res(202,126,"R1 1k")+W("196,126 178,126")+dot(178,126)
+   +term(50,150,"GPIO24","end")+W("54,150 178,150 178,126")+W("178,126 178,134")+resV(178,134,"R2 2k")+W("178,178 178,188")+gnd(178,188)+W("288,152 262,152")+gnd(262,152)),
+ code:`from gpiozero import DistanceSensor
+from time import sleep
+
+sensor = DistanceSensor(echo=24, trigger=23, max_distance=3)
+while True:
+    print(f"{sensor.distance * 100:.1f} cm")
+    sleep(0.3)`,
+ run:"Standalone — but you MUST wire the R1/R2 divider on Echo first, or the 5V signal can damage GPIO24.",
+ rows:[["5V","5V row · g–j, or + rail","HC-SR04 VCC"],["GPIO23","IO23 row · g–j","Trig"],["GPIO24","IO24 row · g–j","Echo — through the divider"],["GND","GND row, or − rail","HC-SR04 GND"]],
+ place:[["R1 1kΩ","HC-SR04 Echo lead row","divider node (e.g. row 30 · col a)"],["R2 2kΩ","divider node (row 30 · col b)","− rail"],["Jumper","divider node (row 30)","IO24 row (Echo) → Pi"]],
+ note:"Trig is a normal 3.3 V output — wire it straight to GPIO23. But Echo outputs 5 V, which would damage a 3.3 V GPIO, so R1 (1 kΩ) and R2 (2 kΩ) form a divider: the node between them sits at about 3.3 V and feeds GPIO24. Other Session 7 parts: DHT11 data → IO17; PIR out → IO17, LED → IO18; MPU6050 on I²C address 0x68 (SDA/SCL like the LCD)."
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 6</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 6", title:"LCD1602 over I²C",
+ svg: wrap(420,162, ttl(10,16,"LCD1602 over I²C (4 wires)")+ic(250,40,150,110,"LCD1602  I²C 0x27")
+   +lpin(250,64,"VCC")+lpin(250,89,"SDA")+lpin(250,114,"SCL")+lpin(250,138,"GND")
+   +W("238,64 150,64")+vcc(150,64,"5V")+term(60,89,"GPIO2","end")+W("64,89 238,89")+term(60,114,"GPIO3","end")+W("64,114 238,114")+W("238,138 150,138")+gnd(150,138)),
+ code:`from LCD1602 import CharLCD1602   # bundled in 20.1.1_I2CLCD1602
+from time import sleep
+
+lcd = CharLCD1602()
+lcd.init_lcd()                     # auto-detects 0x27 / 0x3f
+lcd.clear()
+lcd.write(0, 0, "Hello, Pi!")      # column, row, text
+lcd.write(0, 1, "Freenove kit")
+sleep(10)
+lcd.clear()`,
+ run:"Needs LCD1602.py (bundled in 20.1.1_I2CLCD1602). Enable I2C. No text but backlight on? Turn the contrast pot on the LCD's back.",
+ rows:[["5V","5V row · g–j, or + rail","LCD VCC"],["GPIO2 (SDA)","IO2 row · a–d","LCD SDA"],["GPIO3 (SCL)","IO3 row · a–d","LCD SCL"],["GND","GND row, or − rail","LCD GND"]],
+ place:[["LCD I²C backpack","4 header pins → 4 jumper wires","VCC→5V, SDA→IO2, SCL→IO3, GND→GND/− rail"]],
+ note:"The LCD’s little I²C ‘backpack’ board turns four wires into a full text display — only SDA and SCL carry data, the same two-wire I²C bus the ADC uses (so I²C must be enabled). If the backlight is on but there’s no text, turn the small contrast pot on the back. Shift-register displays in this session (7-segment, 8×8 matrix) use the 74HC595: DS=IO17, latch=IO27, clock=IO22."
+});
+</script>
+</body>
+</html>

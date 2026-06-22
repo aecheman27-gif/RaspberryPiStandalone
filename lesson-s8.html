@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 8</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 8", title:"WebIO (browser control)",
+ svg: wrap(470,128, ttl(10,16,"WebIO — control the Pi's GPIO from a browser")+ic(20,50,120,46,"Phone / browser")+ic(190,50,130,46,"Pi · WebIO.py")
+   +W("140,73 190,73")+'<text x="165" y="66" text-anchor="middle" font-size="9.5" fill="#5C6B7A">Wi-Fi</text>'
+   +W("320,73 360,73")+'<text x="345" y="66" text-anchor="middle" font-size="9" fill="#5C6B7A">GPIO17</text>'
+   +res(360,73,"220 Ω")+W("404,73 420,73")+ledH(420,73,"")+W("438,73 452,73 452,96")+gnd(452,96)),
+ code:`# Minimal web control of the Blink LED on GPIO17
+from gpiozero import LED
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+led = LED(17)
+PAGE = "<h2>Pi LED</h2><a href='/on'>ON</a> | <a href='/off'>OFF</a>"
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/on":  led.on()
+        if self.path == "/off": led.off()
+        self.send_response(200); self.end_headers()
+        self.wfile.write(PAGE.encode())
+
+print("Open http://<your-pi-ip>:8000 in a browser")
+HTTPServer(("", 8000), Handler).serve_forever()`,
+ run:"Standalone. Find the Pi's IP with hostname -I (or use the Tailscale IP) and open port 8000. Freenove's WebIO.py is a fuller version.",
+ rows:[["GPIO17","IO17 row · a–d","LED (toggled from the browser)"],["—","network","phone/browser → Pi over Wi-Fi / Tailscale"]],
+ place:null,
+ note:"No new circuit — WebIO reuses the Blink LED on GPIO17. The Pi runs a tiny web server (WebIO.py); open the Pi’s IP address in any browser on the network and the page’s buttons drive the GPIO pin. This is the seed of any Internet-of-Things project: a web request in, a pin toggle out."
+});
+</script>
+</body>
+</html>

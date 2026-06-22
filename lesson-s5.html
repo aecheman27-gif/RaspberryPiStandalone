@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 5</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 5", title:"Servo (Sweep)",
+ svg: wrap(420,150, ttl(10,16,"Servo — 3-wire (power, signal, ground)")+ic(250,45,140,90,"Servo (SG90)")
+   +lpin(250,68,"V+")+lpin(250,93,"PWM")+lpin(250,118,"GND")
+   +W("238,68 150,68")+vcc(150,68,"5V")+term(60,93,"GPIO18","end")+W("64,93 238,93")+W("238,118 150,118")+gnd(150,118)),
+ code:`from gpiozero import AngularServo
+from time import sleep
+
+servo = AngularServo(18, min_angle=0, max_angle=180,
+                     min_pulse_width=0.0005, max_pulse_width=0.0025)
+while True:
+    for angle in (0, 90, 180, 90):
+        servo.angle = angle
+        sleep(1)`,
+ run:"Standalone. On a Pi 5, ignore any pigpio-backend warning — gpiozero's lgpio still drives the servo.",
+ rows:[["GPIO18","IO18 row · g–j","Servo signal (orange)"],["5V","5V row · g–j, or + rail","Servo VCC (red)"],["GND","GND row, or − rail","Servo GND (brown)"]],
+ place:[["Servo plug","3-pin connector → 3 jumper wires","red→5V, orange→IO18 row, brown→GND/− rail"]],
+ note:"The servo has its own 3-pin plug — just run three jumpers to the holes above (no breadboard build rows needed). It gets 5 V power and a PWM signal on GPIO18 that tells it the angle. Other Session 5 parts: DC motor via L293D (in1=IO27, in2=IO17, enable=IO22); stepper via ULN2003 (IN1–IN4 = IO18, IO23, IO24, IO25). Motors take their own power through the driver — never straight from a GPIO pin."
+});
+</script>
+</body>
+</html>

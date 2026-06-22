@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schematic — Session 3</title><link rel="stylesheet" href="schem.css"></head>
+<body>
+<div class="bar"><h2>Lesson Schematic</h2><div class="sub">Raspberry Pi Electronics · Freenove kit</div></div>
+<div class="wrap"><div id="app"></div></div>
+<script src="schem-lib.js"></script>
+<script>
+renderLesson({
+ sess:"Session 3", title:"Potentiometer → ADC → Pi",
+ svg: wrap(470,200, ttl(10,16,"Potentiometer → ADC (I²C 0x48) → Pi")+ic(150,55,120,120,"ADC PCF8591")
+   +lpin(150,80,"VCC")+lpin(150,105,"GND")+lpin(150,130,"SDA")+lpin(150,155,"SCL")+rpin(270,115,"AIN0")
+   +W("138,80 120,80")+vcc(120,80,"3V3")+W("138,105 120,105")+gnd(120,105)
+   +term(40,135,"GPIO2","end")+W("44,135 95,135 95,130 138,130")+term(40,165,"GPIO3","end")+W("44,165 75,165 75,155 138,155")
+   +W("282,115 330,115")+dot(330,115)+resV(330,68,"")+W("330,68 330,56")+vcc(330,56,"3V3")+W("330,115 330,118")+resV(330,118,"")+W("330,162 330,172")+gnd(330,172)
+   +'<line x1="318" y1="92" x2="330" y2="92" stroke="#222" stroke-width="2"/><polygon points="318,92 324,88 324,96" fill="#222"/><text x="345" y="100" font-size="10" fill="#5C6B7A">wiper</text>'),
+ fig: '<figure>'+wrap(560,200,
+   ttl(12,22,'How a potentiometer works (a 3-terminal variable resistor)')
+   +'<rect x="92" y="42" width="16" height="26" rx="2" fill="#9AA3AE"/>'
+   +'<circle cx="100" cy="96" r="32" fill="#C9A06A" stroke="#8A6D3B" stroke-width="2"/>'
+   +'<line x1="80" y1="126" x2="80" y2="150" stroke="#222" stroke-width="2"/>'
+   +'<line x1="100" y1="128" x2="100" y2="150" stroke="#222" stroke-width="2"/>'
+   +'<line x1="120" y1="126" x2="120" y2="150" stroke="#222" stroke-width="2"/>'
+   +'<text x="80" y="164" text-anchor="middle" font-size="10" fill="#16202E">1 Vcc</text>'
+   +'<text x="100" y="176" text-anchor="middle" font-size="10" fill="#16202E">2 Out</text>'
+   +'<text x="120" y="164" text-anchor="middle" font-size="10" fill="#16202E">3 GND</text>'
+   +'<line x1="178" y1="98" x2="224" y2="98" stroke="#E8743B" stroke-width="4"/>'
+   +'<polygon points="224,90 240,98 224,106" fill="#E8743B"/>'
+   +vcc(360,66,'Vcc')+W('360,66 360,72')+resV(360,72,'')+dot(360,94)
+   +W('360,116 360,140')+gnd(360,140)
+   +'<line x1="360" y1="94" x2="436" y2="94" stroke="#222" stroke-width="2"/>'
+   +'<text x="442" y="98" font-size="11" font-weight="700" fill="#16202E">Output (wiper)</text>'
+ )+'<figcaption>A potentiometer is a resistor with a movable tap (the wiper). The two ends connect to 3V3 and GND; turning the knob slides the wiper to output any voltage in between - and that voltage is what the ADC measures.</figcaption></figure>',
+ code:`from ADCDevice import *      # bundled in the 07.1.1_ADC folder
+from time import sleep
+
+adc = ADCDevice()
+if   adc.detectI2C(0x48): adc = PCF8591()   # most kits
+elif adc.detectI2C(0x4b): adc = ADS7830()
+else: print("ADC not found - run: i2cdetect -y 1"); exit(-1)
+
+while True:
+    value = adc.analogRead(0)            # 0..255 from the wiper
+    volts = value / 255.0 * 3.3
+    print(f"pot: {value}   {volts:.2f} V")
+    sleep(0.2)`,
+ run:"Needs ADCDevice.py — easiest to run from the 07.1.1_ADC folder (it's bundled there). Enable I2C first via raspi-config.",
+ rows:[["GPIO2 (SDA)","IO2 row · a–d","ADC SDA"],["GPIO3 (SCL)","IO3 row · a–d","ADC SCL"],["3V3","3V3 row, or + rail","ADC VCC + pot top leg"],["GND","GND row, or − rail","ADC GND + pot bottom leg"],["—","ADC AIN0 pin","Potentiometer wiper (middle leg)"],["GPIO17","IO17 row · a–d","Buzzer / LED (Softlight)"]],
+ place:[["ADC module","straddle the centre channel, ~rows 24–28","plug its VCC/GND/SDA/SCL/AIN0 into its own rows, then jumper to the holes above"],["Potentiometer","3 legs in three adjacent rows","top → + rail, bottom → − rail, middle → ADC AIN0 row"]],
+ note:"The potentiometer is a variable voltage divider: its two ends go to 3V3 and GND, and turning the knob sweeps the middle (wiper) voltage from 0 to 3.3 V. The ADC measures that on AIN0 and hands Python a number 0–255. The same ADC chip is reused for every analog sensor in Sessions 3–4."
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspberry Pi "edith" — Setup Guide</title>
+<style>
+  :root{
+    color-scheme: light;
+    --pi:#C51A4A; --teal:#0FB5A4; --gold:#F4B41A;
+    --ink:#16202E; --muted:#5C6B7A; --bg:#EEF2F7; --card:#FFFFFF;
+    --line:#DCE3EA; --dark:#0F1B2D; --ok:#1F8A4C;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--pi)}
+  .wrap{max-width:880px;margin:0 auto;padding:0 18px 80px}
+
+  /* sticky header + progress */
+  header{position:sticky;top:0;z-index:20;background:var(--dark);color:#fff;
+    padding:16px 18px;box-shadow:0 2px 12px rgba(15,27,45,.18)}
+  .hwrap{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  header .sub{color:#9FB3C8;font-size:12.5px;margin-top:2px}
+  .bar{flex:1;min-width:160px;height:12px;background:#22344c;border-radius:7px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .35s ease}
+  .pct{font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;min-width:42px;text-align:right}
+  .reset{background:transparent;border:1px solid #3a4d68;color:#cdd9e6;border-radius:7px;
+    padding:5px 10px;font-size:12px;cursor:pointer}
+  .reset:hover{background:#22344c}
+
+  .intro{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:22px 0}
+  .intro h2{margin:.1em 0 .4em;font-size:19px}
+  .facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{background:#F1F5F9;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12.5px}
+  .chip b{color:var(--pi)}
+
+  .fast{background:#FFF8E6;border:1px solid var(--gold);border-radius:14px;padding:18px 22px;margin:22px 0}
+  .fast h2{margin:.1em 0 .5em;font-size:18px;color:#8a6500}
+  .fast ol{margin:.3em 0;padding-left:20px}
+  .fast li{margin:6px 0}
+
+  section.phase{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    margin:18px 0;overflow:hidden;transition:border-color .25s}
+  section.phase.done{border-color:var(--teal)}
+  .ph-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .ph-num{width:30px;height:30px;border-radius:50%;background:var(--dark);color:#fff;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+  section.phase.done .ph-num{background:var(--teal)}
+  .ph-head h3{margin:0;font-size:16.5px}
+  .ph-head .tag{margin-left:auto;font-size:12px;color:var(--muted)}
+  .ph-body{padding:8px 20px 18px}
+
+  .step{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .step:last-child{border-bottom:0}
+  .step input[type=checkbox]{appearance:none;-webkit-appearance:none;width:22px;height:22px;flex:0 0 auto;
+    border:2px solid #c2ccd6;border-radius:6px;margin-top:1px;cursor:pointer;position:relative;background:#fff}
+  .step input:checked{background:var(--teal);border-color:var(--teal)}
+  .step input:checked::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;
+    border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg)}
+  .step .body{flex:1;min-width:0}
+  .step.checked .title{color:var(--muted);text-decoration:line-through;text-decoration-color:#bcc7d2}
+  .title{font-weight:600}
+  .note{font-size:13px;color:var(--muted);margin-top:4px}
+  .warn{font-size:13px;background:#FFF1F3;border-left:3px solid var(--pi);padding:7px 11px;border-radius:6px;margin-top:8px;color:#7a2233}
+  .tip{font-size:13px;background:#EAF7F4;border-left:3px solid var(--teal);padding:7px 11px;border-radius:6px;margin-top:8px;color:#10544c}
+
+  .code{position:relative;background:var(--dark);border-radius:9px;margin:9px 0;padding:11px 44px 11px 13px;
+    font-family:var(--mono);font-size:12.7px;color:#DCE7E5;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  .code .cp{position:absolute;top:7px;right:7px;background:#22344c;border:0;color:#bcd;border-radius:6px;
+    padding:3px 8px;font-size:11px;cursor:pointer}
+  .code .cp:hover{background:#33496a}
+  .code .cp.done{background:var(--teal);color:#fff}
+
+  figure{margin:14px 0;text-align:center}
+  figure svg{max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px}
+  figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
+
+  .done-banner{background:var(--dark);color:#fff;border-radius:14px;padding:24px;text-align:center;margin:24px 0}
+  .done-banner h2{margin:.2em 0;color:var(--gold)}
+  footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:30px}
+  @media print{header{position:static}.reset,.cp{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div style="flex:1 1 220px">
+      <h1>Raspberry Pi &ldquo;edith&rdquo; — Setup Guide</h1>
+      <div class="sub">Headless Pi 5 · SSH · Tailscale · VNC · PyCharm · Freenove kit</div>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="pct" id="pctText">0%</div>
+    <button class="reset" id="resetBtn">Reset</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <h2>What this gets you</h2>
+    <p>Follow these phases top to bottom and you'll go from a blank microSD card to writing Python in PyCharm on Windows that runs on the Pi and blinks a real LED. Tick each box as you go — your progress is saved in this browser automatically.</p>
+    <div class="facts">
+      <span class="chip">Hostname <b>edith</b></span>
+      <span class="chip">User <b>aecheman</b></span>
+      <span class="chip">Tailscale IP <b>100.104.213.4</b></span>
+      <span class="chip">Code folder <b>~/PiCourse</b></span>
+      <span class="chip">Editor <b>PyCharm</b></span>
+      <span class="chip">VNC client <b>TigerVNC</b></span>
+    </div>
+  </div>
+
+  <div class="fast">
+    <h2>⚡ Fast start (already have the Pi imaged?)</h2>
+    <ol>
+      <li>Double-click <b>setup-pi-connection.bat</b> — installs SSH key on the Pi, makes <code>ssh edith</code> work, creates <code>~/PiCourse</code>, downloads TigerVNC. (Type the Pi password once.)</li>
+      <li>SSH in and run <b>pi-classroom-setup.sh</b> — installs all kit libraries + enables I2C/SPI, then <code>sudo reboot</code>.</li>
+      <li>Double-click <b>windows-classroom-tools.bat</b> — installs PyCharm + Git, and prints the exact PyCharm-to-Pi steps.</li>
+      <li>Wire the LED (Phase 7), then <code>scp Blink.py edith:~/PiCourse/</code> and <code>ssh -t edith "python3 ~/PiCourse/Blink.py"</code>. 💡</li>
+    </ol>
+    <p style="margin:.4em 0 0;font-size:13px;color:#8a6500">The phases below explain every step and the gotchas we hit, with checkboxes.</p>
+  </div>
+
+  <!-- PHASE 1 -->
+  <section class="phase" data-phase="1">
+    <div class="ph-head"><div class="ph-num">1</div><h3>Flash the SD card (headless)</h3><span class="tag">Raspberry Pi Imager</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p1a"><div class="body"><div class="title">Install Raspberry Pi Imager and choose Pi 5 + Raspberry Pi OS (64-bit, Desktop)</div><div class="note">From <a href="https://www.raspberrypi.com/software/" target="_blank">raspberrypi.com/software</a>. Pick your microSD as the storage.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p1b"><div class="body"><div class="title">In “Edit Settings”: hostname <b>edith</b>, user <b>aecheman</b> + password, Wi-Fi SSID/password, country US</div><div class="note">This is what makes it work with no monitor/keyboard. Full detail is in <b>Pi5.md</b>.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p1c"><div class="body"><div class="title">Enable SSH (Services tab), write the card, boot the Pi, wait 2–4 min</div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 2 -->
+  <section class="phase" data-phase="2">
+    <div class="ph-head"><div class="ph-num">2</div><h3>Connect from Windows (one script)</h3><span class="tag">SSH key</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p2a"><div class="body"><div class="title">Double-click <b>setup-pi-connection.bat</b></div><div class="note">Generates your SSH key, adds the <code>ssh edith</code> shortcut, <b>installs the key on the Pi</b>, creates <code>~/PiCourse</code>, and downloads TigerVNC.</div><div class="tip">Type your Pi password <b>once</b> when it asks — that's the key install. After this, SSH never asks again.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p2b"><div class="body"><div class="title">Verify passwordless login</div>
+        <div class="code">ssh edith "hostname"<button class="cp">Copy</button></div>
+        <div class="note">Should print <b>edith</b> with no password prompt. That's the signal everything downstream will work.</div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section class="phase" data-phase="3">
+    <div class="ph-head"><div class="ph-num">3</div><h3>Reach it from anywhere (Tailscale)</h3><span class="tag">optional but recommended</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p3a"><div class="body"><div class="title">Install Tailscale on the Pi and sign in (use GitHub or your usual account)</div>
+        <div class="code">ssh edith
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up<button class="cp">Copy</button></div>
+        <div class="note">Open the printed URL in your browser to authorize. The Pi joins your tailnet as <b>edith</b> (IP 100.104.213.4).</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p3b"><div class="body"><div class="title">In the Tailscale admin console, Disable key expiry for edith</div><div class="note"><a href="https://login.tailscale.com/admin/machines" target="_blank">login.tailscale.com/admin/machines</a> → edith → ⋯ → Disable key expiry. Keeps an always-on device from dropping off.</div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 4 -->
+  <section class="phase" data-phase="4">
+    <div class="ph-head"><div class="ph-num">4</div><h3>Prep the Pi for the kit</h3><span class="tag">libraries + I2C/SPI</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p4a"><div class="body"><div class="title">Copy <b>pi-classroom-setup.sh</b> to the Pi and run it</div>
+        <div class="code">scp pi-classroom-setup.sh edith:~/
+ssh -t edith "bash ~/pi-classroom-setup.sh"<button class="cp">Copy</button></div>
+        <div class="note">Installs gpiozero, smbus, spidev, i2c-tools, Thonny; <b>enables I2C &amp; SPI</b> (needed for the LCD/ADC/sensor projects); clones the Freenove code; creates <code>~/PiCourse</code>.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p4b"><div class="body"><div class="title">Reboot so I2C/SPI take effect</div>
+        <div class="code">ssh -t edith "sudo reboot"<button class="cp">Copy</button></div>
+        <div class="warn">Use <b>ssh -t</b> for any <code>sudo</code> command — sudo needs a terminal to read the password.</div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 5 -->
+  <section class="phase" data-phase="5">
+    <div class="ph-head"><div class="ph-num">5</div><h3>Graphical desktop (VNC)</h3><span class="tag">TigerVNC</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p5a"><div class="body"><div class="title">Enable the built-in VNC server on the Pi</div>
+        <div class="code">ssh -t edith "sudo raspi-config"<button class="cp">Copy</button></div>
+        <div class="note">Interface Options → VNC → Yes. Also System Options → Boot/Auto Login → Desktop Autologin.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p5b"><div class="body"><div class="title">Connect with TigerVNC (already downloaded by the script in Phase 2)</div><div class="note">Run <code>%USERPROFILE%\PiTools\Connect-edith-VNC.bat</code>, or open the viewer and enter <b>100.104.213.4:5900</b>.</div>
+        <div class="warn">Use <b>TigerVNC</b>, not RealVNC — RealVNC now charges to connect to non-RealVNC servers. On first connect, accept the two self-signed-certificate prompts (safe — it's your Pi over an encrypted link).</div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 6 -->
+  <section class="phase" data-phase="6">
+    <div class="ph-head"><div class="ph-num">6</div><h3>PyCharm → run code on the Pi</h3><span class="tag">the fiddly part — read the warnings</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p6a"><div class="body"><div class="title">Install the unified PyCharm and activate Pro</div><div class="note">Run <b>windows-classroom-tools.bat</b>, or get it from <a href="https://www.jetbrains.com/pycharm/download/" target="_blank">jetbrains.com/pycharm/download</a> (the “Unified Product”). Then Help → Register → start the trial or activate a free student/.edu license.</div>
+        <div class="warn">Plain <b>Community</b> Edition can't do remote-SSH — its Add-Interpreter menu only shows “Add Local Interpreter.” You need the unified/Pro one.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p6b"><div class="body"><div class="title">New project on the <b>C:</b> drive</div><div class="warn">Don't put the project (or its venv) on an external/<b>F:</b> drive — Windows denies write access and the venv creation fails.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p6c"><div class="body"><div class="title">Settings → Python → Add Interpreter → On SSH → Existing</div><div class="note">Host <b>100.104.213.4</b>, user <b>aecheman</b>, Auth = Key pair → <code>C:\Users\aeche\.ssh\id_ed25519</code>.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p6d"><div class="body"><div class="title">Environment = <b>Select existing</b>, Type = Python, Path = <code>/usr/bin/python3</code></div>
+        <div class="warn">Do <b>not</b> “Generate new” virtualenv — the kit's libraries (gpiozero, smbus) are installed system-wide on the Pi and a fresh venv won't see them.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p6e"><div class="body"><div class="title">Point the upload folder at <code>/home/aecheman/PiCourse</code></div><div class="note">Settings → Build, Execution, Deployment → Deployment → your server → Connection tab → <b>Root path</b> = <code>/home/aecheman/PiCourse</code>; Mappings tab → <b>Deployment path</b> = <code>/</code>. Then menu → Tools → Deployment → <b>Automatic Upload (always)</b>.</div>
+        <div class="warn">The default <code>/tmp/pycharm_project_…</code> gets <b>wiped on every reboot</b> and caused our “No such file / Permission denied” errors. Using your home folder fixes it for good.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p6f"><div class="body"><div class="title">Don't “update” the packages PyCharm lists for the interpreter</div><div class="tip">Those are managed by the Pi's apt. Updating them via pip can break Raspberry Pi OS. To update, use <code>sudo apt full-upgrade</code> on the Pi instead.</div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 7 -->
+  <section class="phase" data-phase="7">
+    <div class="ph-head"><div class="ph-num">7</div><h3>Wire the Blink LED</h3><span class="tag">3 parts</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p7a"><div class="body"><div class="title">Remove any chips from the breadboard (not needed for Blink) and seat the GPIO extension board + ribbon cable</div><div class="warn">Wire with the Pi <b>powered off</b>: <code>ssh -t edith "sudo poweroff"</code>, wait for the green light to stop, unplug USB-C.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p7b"><div class="body"><div class="title">Place the 3 parts as shown: resistor, LED, jumper</div>
+        <figure>
+          <svg viewBox="0 0 700 470" xmlns="http://www.w3.org/2000/svg" role="img" font-family="system-ui,sans-serif">
+            <title>Blink wiring</title>
+            <text x="350" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#16202E">IO17 → 220Ω resistor → LED → GND (via blue − rail)</text>
+            <!-- minus rail -->
+            <rect x="40" y="60" width="24" height="360" rx="6" fill="#E9EEF6" stroke="#5B8DEF"/>
+            <line x1="52" y1="70" x2="52" y2="410" stroke="#5B8DEF" stroke-width="2"/>
+            <text x="52" y="436" text-anchor="middle" font-size="11" font-weight="700" fill="#3A6FD8">− rail (GND)</text>
+            <!-- columns letters -->
+            <g font-size="11" fill="#5C6B7A" text-anchor="middle"><text x="140" y="78">a</text><text x="178" y="78">b</text><text x="216" y="78">c</text><text x="254" y="78">d</text></g>
+            <!-- holes -->
+            <g fill="#B9C2CD">
+              <g><circle cx="140" cy="110" r="4"/><circle cx="178" cy="110" r="4"/><circle cx="216" cy="110" r="4"/><circle cx="254" cy="110" r="4"/></g>
+              <g><circle cx="140" cy="158" r="4"/><circle cx="178" cy="158" r="4"/><circle cx="216" cy="158" r="4"/><circle cx="254" cy="158" r="4"/></g>
+              <g><circle cx="140" cy="206" r="4"/><circle cx="178" cy="206" r="4"/><circle cx="216" cy="206" r="4"/><circle cx="254" cy="206" r="4"/></g>
+              <g><circle cx="140" cy="254" r="4"/><circle cx="178" cy="254" r="4"/><circle cx="216" cy="254" r="4"/><circle cx="254" cy="254" r="4"/></g>
+              <g><circle cx="140" cy="302" r="4"/><circle cx="178" cy="302" r="4"/><circle cx="216" cy="302" r="4"/><circle cx="254" cy="302" r="4"/></g>
+            </g>
+            <!-- extension board -->
+            <rect x="300" y="60" width="110" height="360" rx="6" fill="#1F6FE0"/>
+            <text x="355" y="86" text-anchor="middle" font-size="10" font-weight="700" fill="#CFE0FB">EXTENSION</text>
+            <text x="355" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#CFE0FB">BOARD</text>
+            <g font-size="12" font-weight="700" fill="#fff"><text x="310" y="114">GND</text><text x="310" y="162">IO17</text><text x="310" y="210" fill="#9FC2F5">IO27</text></g>
+            <g fill="#0E4DA8"><circle cx="300" cy="110" r="5"/><circle cx="300" cy="158" r="5"/></g>
+            <!-- jumper GND->rail -->
+            <path d="M140 110 Q92 100 52 110" fill="none" stroke="#333" stroke-width="5"/>
+            <text x="96" y="128" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16202E">jumper</text>
+            <!-- resistor IO17->LED row -->
+            <line x1="140" y1="158" x2="140" y2="182" stroke="#9AA3AE" stroke-width="3"/>
+            <line x1="140" y1="230" x2="140" y2="254" stroke="#9AA3AE" stroke-width="3"/>
+            <rect x="126" y="182" width="28" height="48" rx="6" fill="#D8B48A" stroke="#B8946A"/>
+            <rect x="126" y="190" width="28" height="5" fill="#7A4B2A"/><rect x="126" y="200" width="28" height="5" fill="#7A4B2A"/><rect x="126" y="217" width="28" height="5" fill="#C9A227"/>
+            <text x="92" y="210" text-anchor="middle" font-size="11.5" font-weight="700" fill="#16202E">220Ω</text>
+            <!-- LED LEDrow(b)->rail -->
+            <line x1="178" y1="254" x2="178" y2="300" stroke="#9AA3AE" stroke-width="3"/>
+            <circle cx="140" cy="340" r="19" fill="#E5392B" stroke="#A82318" stroke-width="2"/>
+            <line x1="178" y1="300" x2="156" y2="330" stroke="#1F8A4C" stroke-width="3"/>
+            <line x1="125" y1="350" x2="52" y2="300" stroke="#9AA3AE" stroke-width="3"/>
+            <text x="140" y="386" text-anchor="middle" font-size="12" font-weight="700" fill="#16202E">LED</text>
+            <text x="196" y="284" font-size="11" font-weight="700" fill="#1F8A4C">long leg + (LED row)</text>
+            <text x="120" y="420" font-size="11" font-weight="700" fill="#5C6B7A">short leg − → rail</text>
+            <!-- callouts -->
+            <text x="430" y="114" font-size="12" fill="#5C6B7A">← a GND pin's row</text>
+            <text x="430" y="162" font-size="12" font-weight="700" fill="#16202E">← IO17 = GPIO17</text>
+            <text x="430" y="258" font-size="12" fill="#5C6B7A">← any empty row</text>
+          </svg>
+          <figcaption>Holes in the same horizontal row (a–d) are connected. The resistor's lower leg and the LED's long leg share one row; that's how they join.</figcaption>
+        </figure>
+        <div class="tip">LED long leg = the longer wire, goes toward the resistor/IO17 side. Backwards just means it won't light — no harm.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p7c"><div class="body"><div class="title">Plug USB-C back in, wait ~1 min, confirm it's back</div>
+        <div class="code">ssh edith "hostname"<button class="cp">Copy</button></div></div></div>
+    </div>
+  </section>
+
+  <!-- PHASE 8 -->
+  <section class="phase" data-phase="8">
+    <div class="ph-head"><div class="ph-num">8</div><h3>Run Blink 💡</h3><span class="tag">the payoff</span></div>
+    <div class="ph-body">
+      <div class="step"><input type="checkbox" data-id="p8a"><div class="body"><div class="title">Create <code>Blink.py</code> with this code</div>
+        <div class="code">from gpiozero import LED
+from time import sleep
+
+led = LED(17)
+while True:
+    led.on()
+    sleep(1)
+    led.off()
+    sleep(1)<button class="cp">Copy</button></div>
+        <div class="note">Only the four lines under <code>while True:</code> are indented.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p8b"><div class="body"><div class="title">Run it — either way works</div>
+        <div class="note"><b>Command line (always works):</b></div>
+        <div class="code">scp Blink.py edith:~/PiCourse/
+ssh -t edith "python3 ~/PiCourse/Blink.py"<button class="cp">Copy</button></div>
+        <div class="note"><b>Or PyCharm:</b> with the interpreter + deployment from Phase 6, just press the green ▶ Run. Stop with Ctrl+C / the red ■.</div></div></div>
+      <div class="step"><input type="checkbox" data-id="p8c"><div class="body"><div class="title">The LED blinks once per second 🎉</div><div class="tip">If nothing lights: LED is in backwards (swap its legs). If you get a Python/GPIO error, that actually means the code reached the hardware — check the pin and wiring.</div></div></div>
+    </div>
+  </section>
+
+  <div class="done-banner">
+    <h2>🎉 That's the whole toolchain</h2>
+    <p>Headless Pi over Tailscale, SSH + VNC, PyCharm running code on the Pi, and a blinking LED.<br>Open <b>Course-Handbook.md</b> for the 8-session course and the next projects.</p>
+  </div>
+
+  <footer>
+    Saved automatically in this browser · Repo: github.com/aecheman27-gif/RaspberryPiStandalone · Companion files: Pi5.md · Course-Handbook.md · Raspberry-Pi-STEM-Course.pptx
+  </footer>
+</div>
+
+<script>
+(function(){
+  var KEY = "piSetupProgress_v1";
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.step input[type=checkbox]'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ saved = {}; }
+
+  function paintStep(cb){ cb.closest('.step').classList.toggle('checked', cb.checked); }
+  function paintPhases(){
+    document.querySelectorAll('section.phase').forEach(function(sec){
+      var cbs = sec.querySelectorAll('input[type=checkbox]');
+      var all = cbs.length>0 && Array.prototype.every.call(cbs, function(c){return c.checked;});
+      sec.classList.toggle('done', all);
+    });
+  }
+  function updateProgress(){
+    var done = boxes.filter(function(b){return b.checked;}).length;
+    var pct = boxes.length ? Math.round(done/boxes.length*100) : 0;
+    document.getElementById('barFill').style.width = pct+'%';
+    document.getElementById('pctText').textContent = pct+'%';
+  }
+  function save(){
+    var o={}; boxes.forEach(function(b){ o[b.dataset.id]=b.checked; });
+    try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(e){}
+  }
+
+  boxes.forEach(function(cb){
+    if(saved[cb.dataset.id]) cb.checked = true;
+    paintStep(cb);
+    cb.addEventListener('change', function(){ paintStep(cb); paintPhases(); updateProgress(); save(); });
+  });
+  paintPhases(); updateProgress();
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if(!confirm('Clear all checkmarks?')) return;
+    boxes.forEach(function(b){ b.checked=false; paintStep(b); });
+    paintPhases(); updateProgress();
+    try{ localStorage.removeItem(KEY); }catch(e){}
+  });
+
+  // copy buttons
+  document.querySelectorAll('.code .cp').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.parentNode.cloneNode(true);
+      code.querySelector('.cp').remove();
+      var text = code.textContent;
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent='Copied'; btn.classList.add('done');
+        setTimeout(function(){ btn.textContent='Copy'; btn.classList.remove('done'); },1400);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
